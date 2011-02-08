@@ -5,6 +5,7 @@
 # The sound file taken from http://www.freesound.org/samplesViewSingle.php?id=72557
 
 import datetime
+import time
 from datetime import datetime
 from optparse import OptionParser
 
@@ -28,7 +29,7 @@ from pygame.locals import *
 
 class BossAlert(object):
 
-    def __init__(self, soundpath=None):
+    def __init__(self, soundpath=None, waitfor=0):
         self.reference_color = None
         size = (640,480)        
         pygame.camera.init()
@@ -55,6 +56,8 @@ class BossAlert(object):
             print "Init pygame mixer"
             pygame.mixer.init()
             self.sound = pygame.mixer.Sound(soundpath)
+        self.waitfor = waitfor
+        self.starttime = time.time()
         self.refresh()
 
         
@@ -81,11 +84,14 @@ class BossAlert(object):
     
     def refresh(self):
         snapshot = self.get_image(self.surface)
-
+        if not snapshot:
+            return
         # Change the position of the rectangular window here. Or position your webcam accordingly
         rect = pygame.draw.rect(snapshot, (255, 0, 0), (10, 40, 100, 100), 2)
         
         if not self.reference_color:
+            if time.time() - self.starttime < self.waitfor:
+                return
             self.reference_color = pygame.transform.average_color(snapshot, rect)
         if snapshot:
             # Play a sound and pop up a desktop notification if any motion is detected within the rect window
@@ -123,7 +129,9 @@ if __name__ == '__main__':
                        help="Path to the Sound file to be played when movement is detected", metavar="FILE")
     oparser.add_option("-x", "--disable-notifications", dest="no_notify", action="store_true", default=False,
                        help="Disable desktop notifications (Need pynotify to be installed)")
+    oparser.add_option("-w", "--wait-for", dest="wait_for", default=0,
+                       help="The time (milliseconds) after which the reference color should be captured")
     (options, args) = oparser.parse_args()
     NOTIFICATIONS = not options.no_notify
-    alert = BossAlert(soundpath=options.soundpath)
+    alert = BossAlert(soundpath=options.soundpath, waitfor=int(options.wait_for))
     alert.startloop()

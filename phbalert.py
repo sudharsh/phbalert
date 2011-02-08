@@ -93,20 +93,20 @@ class BossAlert(object):
             if time.time() - self.starttime < self.waitfor:
                 return
             self.reference_color = pygame.transform.average_color(snapshot, rect)
-        if snapshot:
-            # Play a sound and pop up a desktop notification if any motion is detected within the rect window
-            if self.check_movement(rect):
-                print "Movement detected at ", datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
-                if not pygame.mixer.get_busy() and self.sound:
-                    self.sound.play(loops=-1)
-                if NOTIFICATIONS:
-                    self.notify.show()
-                snapshot.fill((255, 0, 0), rect)
-                ren = self.font.render("Boss Alert", 30, (255, 0, 0))
-                snapshot.blit(ren, (400, 200))
-            else:
-                if self.sound:
-                    self.sound.fadeout(500) 
+
+        # Play a sound and pop up a desktop notification if any motion is detected within the rect window
+        if self.check_movement(rect):
+            print "Movement detected at ", datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+            if not pygame.mixer.get_busy() and self.sound:
+                self.sound.play(loops=-1)
+            if NOTIFICATIONS:
+                self.notify.show()
+            snapshot.fill((255, 0, 0), rect)
+            ren = self.font.render("Boss Alert", 30, (255, 0, 0))
+            snapshot.blit(ren, (400, 200))
+        else:
+            if self.sound:
+                self.sound.fadeout(500) 
         self.display.blit(snapshot, (0,0))
         self.surface = snapshot
         pygame.display.flip()
